@@ -16,6 +16,7 @@ services:
       - "8081:80"
     depends_on:
       - redis
+      - mysql
     networks:
       - app-network
 
@@ -26,6 +27,20 @@ services:
       - "8082:80"
     depends_on:
       - redis
+      - mysql
+    networks:
+      - app-network
+
+  mysql:
+    image: "mysql:8.0" # MySQL instance
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: poolClash # Pre-created database
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
     networks:
       - app-network
 

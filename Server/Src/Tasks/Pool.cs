@@ -25,7 +25,7 @@ public class SendPool : IInvocable
 
 
 
-        var pool = Redis.GetRawData("DailyPool");
+        var pool = Redis.GetRawData("DailyPoll");
 
         if (pool == null)
             return Task.CompletedTask;

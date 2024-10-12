@@ -3,10 +3,13 @@ using System.Text.Json;
 using Coravel;
 using Fleck;
 using lib;
+using Microsoft.EntityFrameworkCore;
 using RedLockNet;
 using RedLockNet.SERedis;
 using RedLockNet.SERedis.Configuration;
 using StackExchange.Redis;
+using WS.DB;
+using WS.Events;
 using WS.Models;
 using WS.Services;
 using WS.Tasks;
@@ -36,7 +39,14 @@ public class Program
 
         builder.Services.AddSingleton<IDistributedLockFactory>(redlockFactory);
 
+        string? connectionString = builder.Configuration.GetConnectionString("Mysql");
+
+        if (connectionString != null)
+            builder.Services.AddDbContext<MySqliteContext>(options => options
+                .UseMySQL(connectionString));
+
         var services = builder.FindAndInjectClientEventHandlers(Assembly.GetExecutingAssembly());
+
         var app = builder.Build();
 
         app.Services.UseScheduler(scheduler =>
@@ -49,26 +59,28 @@ public class Program
             builder.Configuration.GetConnectionString("WebSocket")
             ?? throw new Exception("The connection string of WebSocket should be stablish");
 
+
         var server = new WebSocketServer(webSocketConnection);
 
         Redis.Initialize(redlockFactory, redisConnection);
         var db = Redis.Connection.GetDatabase();
 
-        var dailyPoolDb = await Redis.GetData<Pool>("DailyPool");
+        var dailyPoolDb = await Redis.GetData<Poll>("DailyPoll");
 
         if (dailyPoolDb == null || dailyPoolDb == default)
             await Redis.SetData(
-                "DailyPool",
-                new Pool()
+                "DailyPoll",
+                new Poll()
                 {
                     Text = "Que prefires?",
                     Options =
                     [
-                        new Option() { Id = 1, Text = "Esto" },
-                        new Option() { Id = 2, Text = "Nah esto" }
+                        new Option() { OptionId = 1, Text = "Esto" },
+                        new Option() { OptionId = 2, Text = "Nah esto" }
                     ]
                 }
             );
+
 
 
         server.Start(socket =>
@@ -77,8 +89,8 @@ public class Program
             {
                 StateService.AddConnection(socket);
                 Console.WriteLine($"Connected Socket with id {socket.ConnectionInfo.Id}");
-                Console.WriteLine($@"Daily pool {Redis.GetRawData("DailyPool")}");
-                await socket.Send(Redis.GetRawData("DailyPool"));
+                Console.WriteLine($@"Daily pool {Redis.GetRawData("DailyPoll")}");
+                await socket.Send(Redis.GetRawData("DailyPoll"));
             };
             socket.OnClose = () =>
             {
@@ -99,7 +111,6 @@ public class Program
                 }
             };
         });
-
         app.Run();
     }
 }

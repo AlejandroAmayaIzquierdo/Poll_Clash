@@ -2,30 +2,35 @@
 
 namespace WS.Models;
 
-public class Pool
+public class Poll
 {
+    public int PollId { get; set; }
+
     public required string Text { get; set; }
 
-    public required Option[] Options { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow; // Creation timestamp
 
-    public Pool()
-    {
-        // if (Options == null || Options.Length == 0)
-        //     throw new Exception("It can generated a pool without options");
-    }
+    // Navigation property: A poll has many options
+    public required List<Option> Options { get; set; } = [];
 
-
+    // Business logic to get the option with the maximum votes
     public Option? GetWinnableOption()
     {
         return Options.FirstOrDefault(option => option.Votes == Options.Max(o => o.Votes));
     }
-
 }
 
 public class Option
 {
-    public required int Id { get; set; }
+    public int OptionId { get; set; } // Primary key for Options
+
     public required string Text { get; set; }
+
     public int Votes { get; set; } = 0;
 
+    // Foreign key to the associated Poll
+    public int PollId { get; set; }
+
+    // Navigation property back to the Poll
+    public Poll? Poll { get; set; }
 }

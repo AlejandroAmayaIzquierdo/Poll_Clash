@@ -14,16 +14,16 @@ public class VoteEvent : BaseEventHandler<VoteEventData>
     {
         var db = Redis.Connection.GetDatabase();
 
-        var pool = await Redis.GetData<Pool>("DailyPool");
+        var pool = await Redis.GetData<Poll>("DailyPoll");
 
         if (pool == null || pool == default)
             throw new Exception("Pool do not exist");
 
-        var option = pool.Options.FirstOrDefault(e => e.Id == dto.option)
+        var option = pool.Options.FirstOrDefault(e => e.OptionId == dto.option)
             ?? throw new Exception("Do not exist the option");
         option.Votes++;
 
-        await Redis.SetData("DailyPool", pool);
+        await Redis.SetData("DailyPoll", pool);
 
         StateService.BroadCastClients(JsonSerializer.Serialize(pool));
     }
