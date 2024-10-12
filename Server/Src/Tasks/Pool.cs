@@ -1,6 +1,7 @@
 
 
 using Coravel.Invocable;
+using WS.Services;
 
 namespace WS.Tasks;
 
@@ -19,7 +20,17 @@ public class SendPool : IInvocable
 {
     public Task Invoke()
     {
-        // TODO broadcast current pool
-        throw new NotImplementedException();
+        if (StateService.Sockets.Count <= 1)
+            return Task.CompletedTask;
+
+
+
+        var pool = Redis.GetRawData("DailyPool");
+
+        if (pool == null)
+            return Task.CompletedTask;
+        StateService.BroadCastClients(pool);
+
+        return Task.CompletedTask;
     }
 }

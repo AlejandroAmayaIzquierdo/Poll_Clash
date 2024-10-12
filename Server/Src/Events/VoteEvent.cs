@@ -25,6 +25,6 @@ public class VoteEvent : BaseEventHandler<VoteEventData>
 
         await Redis.SetData("DailyPool", pool);
 
-        await socket.Send(JsonSerializer.Serialize(pool));
+        StateService.BroadCastClients(JsonSerializer.Serialize(pool));
     }
 }

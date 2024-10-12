@@ -2,11 +2,12 @@
 
 
 using Fleck;
+using WS.Models;
 
 namespace WS.Services;
 public static class StateService
 {
-    private static readonly Dictionary<Guid, IWebSocketConnection> Sockets = [];
+    public static readonly Dictionary<Guid, IWebSocketConnection> Sockets = [];
     private static readonly Dictionary<int, HashSet<Guid>> Rooms = [];
 
 
@@ -40,5 +41,11 @@ public static class StateService
             if (Sockets.TryGetValue(guid, out var ws))
                 ws.Send(message);
         }
+    }
+
+    public static void BroadCastClients(string data)
+    {
+        foreach (var item in Sockets)
+            item.Value.Send(data);
     }
 }
