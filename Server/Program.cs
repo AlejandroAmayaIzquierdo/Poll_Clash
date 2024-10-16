@@ -39,6 +39,8 @@ public class Program
 
         builder.Services.AddSingleton<IDistributedLockFactory>(redlockFactory);
 
+        builder.Services.AddRegisterRoutes();
+
         string? connectionString = builder.Configuration.GetConnectionString("Mysql");
 
         if (connectionString != null)
@@ -111,6 +113,11 @@ public class Program
                 }
             };
         });
+
+        app.UseMiddleware<ResponseWrapperMiddleware>();
+        app.UseRegisterRoutes();
+
+
         app.Run();
     }
 }

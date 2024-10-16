@@ -30,7 +30,6 @@ public class Option
 
     // Foreign key to the associated Poll
     public int PollId { get; set; }
-
-    // Navigation property back to the Poll
-    public Poll? Poll { get; set; }
 }
+
+public record PollCreation(string text, List<string> options);

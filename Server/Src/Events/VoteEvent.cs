@@ -14,7 +14,7 @@ public class VoteEvent : BaseEventHandler<VoteEventData>
     {
         var db = Redis.Connection.GetDatabase();
 
-        var pool = await Redis.GetData<Poll>("DailyPoll");
+        var pool = await Redis.GetData<Poll>(dto.id);
 
         if (pool == null || pool == default)
             throw new Exception("Pool do not exist");
@@ -23,7 +23,7 @@ public class VoteEvent : BaseEventHandler<VoteEventData>
             ?? throw new Exception("Do not exist the option");
         option.Votes++;
 
-        await Redis.SetData("DailyPoll", pool);
+        await Redis.SetData(dto.id, pool);
 
         StateService.BroadCastClients(JsonSerializer.Serialize(pool));
     }
