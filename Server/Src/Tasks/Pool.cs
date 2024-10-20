@@ -1,36 +1,26 @@
 
 
+using System.Text.Json;
 using Coravel.Invocable;
+using WS.Models;
 using WS.Services;
 
 namespace WS.Tasks;
 
-
-public class GeneratedPool : IInvocable
+public class BroadCastPoolTask : IInvocable
 {
-    public Task Invoke()
+    public async Task Invoke()
     {
-        // TODO every day update the daily pool
-        Console.WriteLine("I was invoke");
-        return Task.CompletedTask;
-    }
-}
 
-public class SendPool : IInvocable
-{
-    public Task Invoke()
-    {
-        if (StateService.Sockets.Count <= 1)
-            return Task.CompletedTask;
+        foreach (var room in StateService.Rooms)
+        {
+            var poll = await Redis.GetData<Poll>(room.Key);
 
+            if (poll == null)
+                continue;
 
-
-        var pool = Redis.GetRawData("DailyPoll");
-
-        if (pool == null)
-            return Task.CompletedTask;
-        StateService.BroadCastClients(pool);
-
-        return Task.CompletedTask;
+            if (poll.connectedPears > 1)
+                StateService.BroadcastToRoom(room.Key, JsonSerializer.Serialize(poll));
+        }
     }
 }

@@ -20,6 +20,7 @@ public class PollsRoute : IRoute
         {
             var poll = new Models.Poll
             {
+                PollId = Guid.NewGuid().ToString(),
                 Text = pollJson.text,
                 Options = pollJson.options.Select(optionText => new Option
                 {
@@ -35,10 +36,11 @@ public class PollsRoute : IRoute
             return Results.Ok(poll);
         });
 
-        pollRoute.MapGet("/{id}", async (MySqliteContext context, int id) =>
+        pollRoute.MapGet("/{id}", async (MySqliteContext context, string id) =>
         {
-            var a = await context.Polls.Include(e => e.Options).FirstOrDefaultAsync(e => e.PollId == id);
-            return Results.Ok(a);
+            var poll = await context.Polls.Include(e => e.Options).FirstOrDefaultAsync(e => e.PollId == id)
+                ?? throw new Exception("Not found");
+            return Results.Ok(poll);
         });
     }
 }

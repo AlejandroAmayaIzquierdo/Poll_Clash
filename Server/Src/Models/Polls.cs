@@ -1,10 +1,12 @@
 
 
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace WS.Models;
 
 public class Poll
 {
-    public int PollId { get; set; }
+    public required string PollId { get; set; }
 
     public required string Text { get; set; }
 
@@ -12,6 +14,9 @@ public class Poll
 
     // Navigation property: A poll has many options
     public required List<Option> Options { get; set; } = [];
+
+    [NotMapped]
+    public int connectedPears { get; set; } = 0;
 
     // Business logic to get the option with the maximum votes
     public Option? GetWinnableOption()
@@ -29,7 +34,8 @@ public class Option
     public int Votes { get; set; } = 0;
 
     // Foreign key to the associated Poll
-    public int PollId { get; set; }
+    public string PollId { get; set; }
+
 }
 
 public record PollCreation(string text, List<string> options);

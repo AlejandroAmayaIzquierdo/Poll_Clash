@@ -7,13 +7,17 @@ using WS.Models;
 namespace WS.Services;
 public static class StateService
 {
-    public static readonly Dictionary<Guid, IWebSocketConnection> Sockets = [];
-    private static readonly Dictionary<int, HashSet<Guid>> Rooms = [];
+    private static readonly Dictionary<Guid, IWebSocketConnection> _sockets = [];
+    private static readonly Dictionary<string, HashSet<Guid>> _rooms = [];
+
+    public static Dictionary<Guid, IWebSocketConnection> Sockets => _sockets;
+
+    public static Dictionary<string, HashSet<Guid>> Rooms => _rooms;
 
 
     public static bool AddConnection(IWebSocketConnection webSocket)
     {
-        return Sockets.TryAdd(webSocket.ConnectionInfo.Id, webSocket);
+        return _sockets.TryAdd(webSocket.ConnectionInfo.Id, webSocket);
     }
 
     public static bool RemoveConnection(Guid id)
@@ -21,31 +25,31 @@ public static class StateService
         // var roomContainingUser = Rooms.First(e => e.Value.Contains(id));
 
         // roomContainingUser
-        return Sockets.Remove(id);
+        return _sockets.Remove(id);
     }
-    public static void AddRoom(IWebSocketConnection socket, int room)
+    public static bool AddRoom(IWebSocketConnection socket, string room)
     {
-        if (!Rooms.ContainsKey(room))
-            Rooms.Add(room, []);
-        Rooms[room].Add(socket.ConnectionInfo.Id);
+        if (!_rooms.ContainsKey(room))
+            _rooms.Add(room, []);
+        return _rooms[room].Add(socket.ConnectionInfo.Id);
     }
 
-    public static void BroadcastToRoom(int room, string message)
+    public static void BroadcastToRoom(string room, string message)
     {
-        bool doesRoomExist = Rooms.TryGetValue(room, out var guids);
-        if (doesRoomExist || guids == null)
+        bool doesRoomExist = _rooms.TryGetValue(room, out var guids);
+        if (!doesRoomExist || guids == null)
             throw new Exception("Room does not exist");
 
         foreach (var guid in guids)
         {
-            if (Sockets.TryGetValue(guid, out var ws))
+            if (_sockets.TryGetValue(guid, out var ws))
                 ws.Send(message);
         }
     }
 
     public static void BroadCastClients(string data)
     {
-        foreach (var item in Sockets)
+        foreach (var item in _sockets)
             item.Value.Send(data);
     }
 }

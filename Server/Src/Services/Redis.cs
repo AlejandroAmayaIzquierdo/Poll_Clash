@@ -76,6 +76,7 @@ public class Redis
 
     public static string? GetRawData(string key)
     {
+
         return Connection.GetDatabase().StringGet(key);
     }
 }

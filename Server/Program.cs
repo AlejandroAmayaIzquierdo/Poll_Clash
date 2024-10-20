@@ -9,8 +9,6 @@ using RedLockNet.SERedis;
 using RedLockNet.SERedis.Configuration;
 using StackExchange.Redis;
 using WS.DB;
-using WS.Events;
-using WS.Models;
 using WS.Services;
 using WS.Tasks;
 
@@ -18,13 +16,12 @@ namespace WS;
 
 public class Program
 {
-    public static async Task Main(string[] args)
+    public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
 
         builder.Services.AddScheduler();
-        builder.Services.AddTransient<GeneratedPool>();
-        builder.Services.AddTransient<SendPool>();
+        builder.Services.AddTransient<BroadCastPoolTask>();
 
 
         string? redisConnection =
@@ -53,8 +50,7 @@ public class Program
 
         app.Services.UseScheduler(scheduler =>
         {
-            scheduler.Schedule<GeneratedPool>().Daily();
-            scheduler.Schedule<SendPool>().EverySeconds(2);
+            scheduler.Schedule<BroadCastPoolTask>().EverySeconds(2);
         });
 
         string? webSocketConnection =
@@ -63,36 +59,14 @@ public class Program
 
 
         var server = new WebSocketServer(webSocketConnection);
-
         Redis.Initialize(redlockFactory, redisConnection);
-        var db = Redis.Connection.GetDatabase();
-
-        var dailyPoolDb = await Redis.GetData<Poll>("DailyPoll");
-
-        if (dailyPoolDb == null || dailyPoolDb == default)
-            await Redis.SetData(
-                "DailyPoll",
-                new Poll()
-                {
-                    Text = "Que prefires?",
-                    Options =
-                    [
-                        new Option() { OptionId = 1, Text = "Esto" },
-                        new Option() { OptionId = 2, Text = "Nah esto" }
-                    ]
-                }
-            );
-
-
 
         server.Start(socket =>
         {
             socket.OnOpen = async () =>
             {
                 StateService.AddConnection(socket);
-                Console.WriteLine($"Connected Socket with id {socket.ConnectionInfo.Id}");
-                Console.WriteLine($@"Daily pool {Redis.GetRawData("DailyPoll")}");
-                await socket.Send(Redis.GetRawData("DailyPoll"));
+                await socket.Send("Connection success");
             };
             socket.OnClose = () =>
             {
