@@ -8,7 +8,7 @@ import { Share2 } from "lucide-react";
 import { Progress } from "../ui/progress";
 
 interface VoteCardProps {
-  vote: APP.Vote;
+  vote: APP.Poll;
   onVote?: (id: number) => void;
 }
 
@@ -21,7 +21,7 @@ const VoteCard: React.FC<VoteCardProps> = ({ vote, onVote }) => {
     : 0;
 
   return (
-    <Card>
+    <Card className="w-[90%]">
       <CardHeader>
         <CardTitle className="text-2xl font-bold text-center">
           {Text ?? "Daily Vote"}
@@ -29,7 +29,7 @@ const VoteCard: React.FC<VoteCardProps> = ({ vote, onVote }) => {
       </CardHeader>
       <CardContent>
         {Options?.map((option) => (
-          <div key={option.Id} className="mb-4">
+          <div key={option.OptionId} className="mb-4">
             <div className="flex justify-between items-center mb-2">
               <span className="font-semibold">{option.Text}</span>
               <span className="text-sm text-gray-500">
@@ -43,13 +43,14 @@ const VoteCard: React.FC<VoteCardProps> = ({ vote, onVote }) => {
               />
               <Button
                 onClick={() => {
-                  if (onVote) onVote(option.Id);
+                  console.log(option.OptionId);
+                  if (onVote) onVote(option.OptionId);
                 }}
-                variant={userVote === option.Id ? "secondary" : "default"}
+                variant={userVote === option.OptionId ? "secondary" : "default"}
               >
-                {userVote === option.Id ? "Voted" : "Vote"}
+                {userVote === option.OptionId ? "Voted" : "Vote"}
               </Button>
-              {userVote === option.Id && (
+              {userVote === option.OptionId && (
                 <Button variant="outline" size="icon">
                   <Share2 className="h-4 w-4" />
                 </Button>

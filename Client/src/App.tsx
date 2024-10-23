@@ -6,7 +6,7 @@ function App() {
   return (
     <Suspense>
       {" "}
-      <div className="w-full h-full absolute items-center justify-center flex flex-col">
+      <div className="w-full h-full absolute items-center justify-center flex flex-col bg-gradient-to-b from-gray-100 to-gray-200 ">
         {useRoutes(routes)}
       </div>
     </Suspense>

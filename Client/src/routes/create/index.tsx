@@ -1,12 +1,16 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { CreatePoll } from "@/Services/CreatePoll";
 
 import { PlusCircle, X } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router";
 
 // interface CreatePageProps {}
 const CreatePage: React.FC = () => {
+  const navigate = useNavigate();
+
   const [question, setQuestion] = useState("");
   const [options, setOptions] = useState(["", ""]);
   const [error, setError] = useState("");
@@ -26,7 +30,7 @@ const CreatePage: React.FC = () => {
     setOptions(newOptions);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
@@ -44,12 +48,16 @@ const CreatePage: React.FC = () => {
     // Here you would typically send the data to your backend
     console.log("Poll created:", { question, options: validOptions });
 
+    const { Detail, Error } = await CreatePoll(question, validOptions);
+
+    if (!Error) navigate(`/${Detail.pollId}`);
+
     // Reset form after submission
     setQuestion("");
     setOptions(["", ""]);
   };
   return (
-    <div className="w-[90%] mx-auto p-6 bg-white rounded-lg shadow-md">
+    <div className="w-[90%] bg-gray-50 mx-auto p-6 rounded-lg shadow-md">
       <h2 className="text-2xl font-bold mb-4">Create a Poll</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
