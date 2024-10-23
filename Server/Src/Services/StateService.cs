@@ -22,7 +22,16 @@ public static class StateService
 
     public static bool RemoveConnection(Guid id)
     {
-        // var roomContainingUser = Rooms.First(e => e.Value.Contains(id));
+        // Find all rooms containing the user
+        foreach (var room in _rooms.Where(e => e.Value.Contains(id)).ToList())
+        {
+            room.Value.Remove(id); // Remove user from room
+            if (room.Value.Count == 0)
+            {
+                _rooms.Remove(room.Key); // Remove the room if it's empty
+            }
+        }
+
 
         // roomContainingUser
         return _sockets.Remove(id);

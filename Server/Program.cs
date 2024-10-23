@@ -36,6 +36,23 @@ public class Program
 
         builder.Services.AddSingleton<IDistributedLockFactory>(redlockFactory);
 
+        var allowedHosts =
+            builder
+                .Configuration.GetValue<string>("AllowedHosts")
+                ?.Split(';', StringSplitOptions.RemoveEmptyEntries) ?? [];
+
+        // Add CORS services
+        builder.Services.AddCors(options =>
+        {
+            options.AddDefaultPolicy(policy =>
+            {
+                if (allowedHosts.Contains("*"))
+                    policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+                else
+                    policy.WithOrigins(allowedHosts).AllowAnyMethod().AllowAnyHeader();
+            });
+        });
+
         builder.Services.AddRegisterRoutes();
 
         string? connectionString = builder.Configuration.GetConnectionString("Mysql");
@@ -65,8 +82,22 @@ public class Program
         {
             socket.OnOpen = async () =>
             {
-                StateService.AddConnection(socket);
-                await socket.Send("Connection success");
+                var origin = socket.ConnectionInfo.Headers["Origin"];
+
+                // List of allowed origins (e.g., your website domain)
+                var allowedOrigins = allowedHosts;
+                // Check if the Origin is in the allowed origins list
+                if (allowedHosts.Contains("*"))
+                    StateService.AddConnection(socket);
+                else if (!string.IsNullOrEmpty(origin) && allowedOrigins.Contains(origin))
+                    StateService.AddConnection(socket);
+                else
+                {
+                    // If the origin is not allowed, close the connection
+                    await socket.Send("Unauthorized connection");
+                    StateService.RemoveConnection(socket.ConnectionInfo.Id);
+                    socket.Close();  // Close the WebSocket connection
+                }
             };
             socket.OnClose = () =>
             {
@@ -90,7 +121,7 @@ public class Program
 
         app.UseMiddleware<ResponseWrapperMiddleware>();
         app.UseRegisterRoutes();
-
+        app.UseCors();
 
         app.Run();
     }
