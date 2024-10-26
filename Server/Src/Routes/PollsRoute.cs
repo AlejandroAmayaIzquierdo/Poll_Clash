@@ -9,7 +9,7 @@ namespace WS.Routes.Poll;
 
 public class PollsRoute : IRoute
 {
-    public string MODULE => "/polls";
+    public string MODULE => "/api/polls";
 
     public void Register(ref WebApplication app)
     {

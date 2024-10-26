@@ -79,4 +79,34 @@ public class Redis
 
         return Connection.GetDatabase().StringGet(key);
     }
+
+    public static async Task<T?> GetAndRemoveData<T>(string key)
+    {
+        try
+        {
+            await using var _lock = await _LockFactory.CreateLockAsync(
+                key,
+                TimeSpan.FromSeconds(10)
+            );
+
+            if (_lock.IsAcquired)
+            {
+                var db = Connection.GetDatabase();
+                var res = db.StringGet(key);
+
+                if (!res.HasValue || res.IsNullOrEmpty)
+                    return default;
+
+                var obj = JsonSerializer.Deserialize<T>(res.ToString()!);
+
+                await db.KeyDeleteAsync(key);
+                return obj;
+            }
+            return default;
+        }
+        catch
+        {
+            return default;
+        }
+    }
 }

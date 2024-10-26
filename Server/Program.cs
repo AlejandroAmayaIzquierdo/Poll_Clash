@@ -65,6 +65,7 @@ public class Program
 
         var app = builder.Build();
 
+
         app.Services.UseScheduler(scheduler =>
         {
             scheduler.Schedule<BroadCastPoolTask>().EverySeconds(2);
@@ -82,26 +83,39 @@ public class Program
         {
             socket.OnOpen = async () =>
             {
-                var origin = socket.ConnectionInfo.Headers["Origin"];
-
-                // List of allowed origins (e.g., your website domain)
-                var allowedOrigins = allowedHosts;
-                // Check if the Origin is in the allowed origins list
-                if (allowedHosts.Contains("*"))
-                    StateService.AddConnection(socket);
-                else if (!string.IsNullOrEmpty(origin) && allowedOrigins.Contains(origin))
-                    StateService.AddConnection(socket);
-                else
+                if (socket.ConnectionInfo.Headers.TryGetValue("Origin", out string? value))
                 {
-                    // If the origin is not allowed, close the connection
-                    await socket.Send("Unauthorized connection");
-                    StateService.RemoveConnection(socket.ConnectionInfo.Id);
-                    socket.Close();  // Close the WebSocket connection
+                    var origin = value;
+
+                    // List of allowed origins (e.g., your website domain)
+                    var allowedOrigins = allowedHosts;
+                    // Check if the Origin is in the allowed origins list
+                    if (allowedHosts.Contains("*"))
+                    {
+                        StateService.AddConnection(socket);
+                        return;
+                    }
+                    else if (!string.IsNullOrEmpty(origin) && allowedOrigins.Contains(origin))
+                    {
+                        StateService.AddConnection(socket);
+                        return;
+                    }
                 }
+
+                // // If the origin is not allowed, close the connection
+                await socket.Send("Unauthorized connection");
+                socket.Close();  // Close the WebSocket connection
             };
-            socket.OnClose = () =>
+            socket.OnClose = async () =>
             {
-                StateService.RemoveConnection(socket.ConnectionInfo.Id);
+                Console.WriteLine($"Socket {socket.ConnectionInfo.Id} on close");
+
+
+                using var scope = app.Services.CreateScope();
+                var services = scope.ServiceProvider;
+                var dbContext = services.GetRequiredService<MySqliteContext>();
+                await StateService.RemoveConnection(socket.ConnectionInfo.Id, dbContext);
+
             };
 
             socket.OnMessage = async message =>
@@ -122,6 +136,8 @@ public class Program
         app.UseMiddleware<ResponseWrapperMiddleware>();
         app.UseRegisterRoutes();
         app.UseCors();
+
+
 
         app.Run();
     }

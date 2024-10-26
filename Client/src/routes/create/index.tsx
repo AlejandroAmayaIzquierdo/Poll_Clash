@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { VITE_APP_BASE_URL } from "@/constants";
 import { CreatePoll } from "@/Services/CreatePoll";
 
 import { PlusCircle, X } from "lucide-react";
@@ -33,6 +34,7 @@ const CreatePage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    console.log(VITE_APP_BASE_URL);
 
     if (!question.trim()) {
       setError("Please enter a question.");
