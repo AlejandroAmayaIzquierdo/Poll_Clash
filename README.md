@@ -11,7 +11,7 @@ By utilizing reverse proxies like Nginx, Poll Clash can handle multiple instance
 
 - [X] Real-time Polling: Instant updates and results for participants.
 - [X] Easy Poll Creation: (In progress)
-- [ ] Just one vote per connection (easy way is to control sockets. But it will be easy surpass.)
+- [ ] Just one vote per connection (easy way is to control sockets. But it will be easy surpass.) (i dont want to implement auth)
 - [ ] Better UI 🤣
 
 ## How to Use Poll Clash
